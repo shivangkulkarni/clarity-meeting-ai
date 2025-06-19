@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Users, CheckCircle, ArrowRight, Upload, Download, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import ApiKeySettings from "@/components/ApiKeySettings";
 import { summarizeWithAI } from "@/utils/aiService";
 
 interface MeetingSummary {
@@ -25,7 +23,6 @@ const Index = () => {
   const [transcript, setTranscript] = useState('');
   const [summary, setSummary] = useState<MeetingSummary | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
 
   const handleSummarize = async () => {
@@ -38,20 +35,11 @@ const Index = () => {
       return;
     }
 
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please configure your OpenAI API key first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsProcessing(true);
     console.log("Processing transcript:", transcript.length, "characters");
 
     try {
-      const result = await summarizeWithAI(transcript, apiKey);
+      const result = await summarizeWithAI(transcript);
       setSummary(result);
       
       toast({
@@ -116,9 +104,6 @@ const Index = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Input Section */}
           <div className="space-y-6">
-            {/* API Key Settings */}
-            <ApiKeySettings onApiKeyChange={setApiKey} />
-
             <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
               <CardHeader className="space-y-1">
                 <CardTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2">
@@ -145,7 +130,7 @@ Mike: From an engineering perspective, we're on track for the March product laun
                 <div className="flex gap-3">
                   <Button 
                     onClick={handleSummarize} 
-                    disabled={isProcessing || !apiKey}
+                    disabled={isProcessing}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {isProcessing ? (
@@ -311,7 +296,7 @@ Mike: From an engineering perspective, we're on track for the March product laun
                   <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">Ready to Analyze</h3>
                   <p className="text-slate-600 mb-4">
-                    Configure your OpenAI API key and enter your meeting transcript to generate a comprehensive AI-powered summary.
+                    Enter your meeting transcript to generate a comprehensive AI-powered summary.
                   </p>
                   <div className="grid grid-cols-2 gap-4 mt-6">
                     <div className="text-center p-4 bg-slate-50 rounded-lg">

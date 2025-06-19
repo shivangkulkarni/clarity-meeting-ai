@@ -30,13 +30,12 @@ Return only valid JSON without any markdown formatting or explanations.
 Meeting transcript:
 `;
 
-export const summarizeWithAI = async (transcript: string, apiKey: string): Promise<MeetingSummary> => {
+// TODO: Replace with your actual OpenAI API key
+const OPENAI_API_KEY = 'your-api-key-here';
+
+export const summarizeWithAI = async (transcript: string): Promise<MeetingSummary> => {
   console.log("Starting AI summarization with OpenAI API");
   
-  if (!apiKey) {
-    throw new Error('OpenAI API key is required');
-  }
-
   if (!transcript.trim()) {
     throw new Error('Meeting transcript is required');
   }
@@ -45,7 +44,7 @@ export const summarizeWithAI = async (transcript: string, apiKey: string): Promi
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
       model: 'gpt-4o',
@@ -69,7 +68,7 @@ export const summarizeWithAI = async (transcript: string, apiKey: string): Promi
     console.error('OpenAI API Error:', errorData);
     
     if (response.status === 401) {
-      throw new Error('Invalid API key. Please check your OpenAI API key.');
+      throw new Error('Invalid API key. Please check the configured OpenAI API key.');
     } else if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please try again in a few moments.');
     } else if (response.status === 403) {
