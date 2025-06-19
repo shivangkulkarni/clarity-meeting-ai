@@ -79,12 +79,14 @@ export const summarizeWithAI = async (transcript: string): Promise<MeetingSummar
 
   const data = await response.json();
   console.log("OpenAI API Response received");
+  console.log("Full API Response:", JSON.stringify(data, null, 2));
 
   if (!data.choices || !data.choices[0] || !data.choices[0].message) {
     throw new Error('Invalid response from AI service');
   }
 
   const content = data.choices[0].message.content;
+  console.log("Raw AI Content:", content);
   
   try {
     const summary = JSON.parse(content) as MeetingSummary;
@@ -94,10 +96,12 @@ export const summarizeWithAI = async (transcript: string): Promise<MeetingSummar
       throw new Error('Invalid summary structure from AI');
     }
 
+    console.log("Parsed Summary:", JSON.stringify(summary, null, 2));
     console.log("AI summarization completed successfully");
     return summary;
   } catch (parseError) {
     console.error('Failed to parse AI response:', parseError);
+    console.error('Content that failed to parse:', content);
     throw new Error('Failed to parse AI response. Please try again.');
   }
 };
