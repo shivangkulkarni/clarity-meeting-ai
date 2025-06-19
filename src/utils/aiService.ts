@@ -1,4 +1,3 @@
-
 interface MeetingSummary {
   highlights: string[];
   actionItems: Array<{
@@ -30,8 +29,8 @@ Return only valid JSON without any markdown formatting or explanations.
 Meeting transcript:
 `;
 
-// TODO: Replace with your actual OpenAI API key
-const OPENAI_API_KEY = 'your-api-key-here';
+// Replace this with your actual OpenAI API key
+const OPENAI_API_KEY = 'sk-your-actual-api-key-here';
 
 export const summarizeWithAI = async (transcript: string): Promise<MeetingSummary> => {
   console.log("Starting AI summarization with OpenAI API");
