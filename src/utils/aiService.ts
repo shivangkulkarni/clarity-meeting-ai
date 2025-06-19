@@ -1,0 +1,105 @@
+
+interface MeetingSummary {
+  highlights: string[];
+  actionItems: Array<{
+    task: string;
+    assignee?: string;
+    priority: 'high' | 'medium' | 'low';
+  }>;
+  decisions: string[];
+  speakers: string[];
+  topics: string[];
+}
+
+const AI_PROMPT = `
+Please analyze the following meeting transcript and provide a structured summary in JSON format. Extract:
+
+1. highlights: Key points, achievements, metrics, or important information discussed (3-5 items)
+2. actionItems: Tasks that need to be completed, with assignee if mentioned and priority level
+3. decisions: Important decisions or agreements made during the meeting
+4. speakers: List of people who spoke (extract names from the transcript)
+5. topics: Main topics or themes discussed
+
+For action items, determine priority as:
+- high: urgent tasks, deadlines mentioned, critical issues
+- medium: important but not urgent tasks
+- low: general tasks, nice-to-have items
+
+Return only valid JSON without any markdown formatting or explanations.
+
+Meeting transcript:
+`;
+
+export const summarizeWithAI = async (transcript: string, apiKey: string): Promise<MeetingSummary> => {
+  console.log("Starting AI summarization with OpenAI API");
+  
+  if (!apiKey) {
+    throw new Error('OpenAI API key is required');
+  }
+
+  if (!transcript.trim()) {
+    throw new Error('Meeting transcript is required');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert meeting assistant. Analyze meeting transcripts and extract structured information in JSON format.'
+        },
+        {
+          role: 'user',
+          content: AI_PROMPT + transcript
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 1500,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('OpenAI API Error:', errorData);
+    
+    if (response.status === 401) {
+      throw new Error('Invalid API key. Please check your OpenAI API key.');
+    } else if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please try again in a few moments.');
+    } else if (response.status === 403) {
+      throw new Error('API access forbidden. Please check your OpenAI account status.');
+    } else {
+      throw new Error(`AI service error: ${response.status}. Please try again.`);
+    }
+  }
+
+  const data = await response.json();
+  console.log("OpenAI API Response received");
+
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    throw new Error('Invalid response from AI service');
+  }
+
+  const content = data.choices[0].message.content;
+  
+  try {
+    const summary = JSON.parse(content) as MeetingSummary;
+    
+    // Validate the structure
+    if (!summary.highlights || !summary.actionItems || !summary.decisions || !summary.speakers || !summary.topics) {
+      throw new Error('Invalid summary structure from AI');
+    }
+
+    console.log("AI summarization completed successfully");
+    return summary;
+  } catch (parseError) {
+    console.error('Failed to parse AI response:', parseError);
+    throw new Error('Failed to parse AI response. Please try again.');
+  }
+};

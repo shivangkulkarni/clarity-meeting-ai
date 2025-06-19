@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { FileText, Users, CheckCircle, ArrowRight, Upload, Download, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ApiKeySettings from "@/components/ApiKeySettings";
+import { summarizeWithAI } from "@/utils/aiService";
 
 interface MeetingSummary {
   highlights: string[];
@@ -24,32 +25,8 @@ const Index = () => {
   const [transcript, setTranscript] = useState('');
   const [summary, setSummary] = useState<MeetingSummary | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
-
-  const mockSummarize = (text: string): MeetingSummary => {
-    // Mock AI processing - in a real app, this would call an AI API
-    const words = text.toLowerCase();
-    
-    return {
-      highlights: [
-        "Q4 revenue targets exceeded expectations by 15%",
-        "New product launch scheduled for March 2025",
-        "Customer satisfaction scores improved to 94%"
-      ],
-      actionItems: [
-        { task: "Prepare marketing campaign for new product launch", assignee: "Sarah", priority: 'high' },
-        { task: "Schedule follow-up meeting with engineering team", assignee: "Mike", priority: 'medium' },
-        { task: "Update quarterly report with latest metrics", assignee: "Alex", priority: 'low' }
-      ],
-      decisions: [
-        "Approved budget increase for marketing department",
-        "Agreed to extend beta testing period by 2 weeks",
-        "Decided to implement new customer feedback system"
-      ],
-      speakers: ["John (CEO)", "Sarah (Marketing)", "Mike (Engineering)", "Alex (Finance)"],
-      topics: ["Revenue Performance", "Product Launch", "Customer Feedback", "Budget Planning"]
-    };
-  };
 
   const handleSummarize = async () => {
     if (!transcript.trim()) {
@@ -61,20 +38,36 @@ const Index = () => {
       return;
     }
 
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please configure your OpenAI API key first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     console.log("Processing transcript:", transcript.length, "characters");
 
-    // Simulate AI processing
-    setTimeout(() => {
-      const result = mockSummarize(transcript);
+    try {
+      const result = await summarizeWithAI(transcript, apiKey);
       setSummary(result);
-      setIsProcessing(false);
       
       toast({
         title: "Summary Generated",
-        description: "Your meeting notes have been successfully analyzed.",
+        description: "Your meeting notes have been successfully analyzed by AI.",
       });
-    }, 2000);
+    } catch (error) {
+      console.error("Summarization error:", error);
+      toast({
+        title: "Summarization Failed",
+        description: error instanceof Error ? error.message : "Failed to summarize the meeting. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleExport = () => {
@@ -123,6 +116,9 @@ const Index = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Input Section */}
           <div className="space-y-6">
+            {/* API Key Settings */}
+            <ApiKeySettings onApiKeyChange={setApiKey} />
+
             <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
               <CardHeader className="space-y-1">
                 <CardTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2">
@@ -149,13 +145,13 @@ Mike: From an engineering perspective, we're on track for the March product laun
                 <div className="flex gap-3">
                   <Button 
                     onClick={handleSummarize} 
-                    disabled={isProcessing}
+                    disabled={isProcessing || !apiKey}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {isProcessing ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Processing...
+                        Analyzing with AI...
                       </>
                     ) : (
                       <>
@@ -315,7 +311,7 @@ Mike: From an engineering perspective, we're on track for the March product laun
                   <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">Ready to Analyze</h3>
                   <p className="text-slate-600 mb-4">
-                    Enter your meeting transcript to generate a comprehensive summary with highlights, action items, and key decisions.
+                    Configure your OpenAI API key and enter your meeting transcript to generate a comprehensive AI-powered summary.
                   </p>
                   <div className="grid grid-cols-2 gap-4 mt-6">
                     <div className="text-center p-4 bg-slate-50 rounded-lg">
