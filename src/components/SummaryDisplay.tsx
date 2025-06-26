@@ -78,7 +78,7 @@ const SummaryDisplay = ({ summary, onExport, onEmail }: SummaryDisplayProps) => 
       {/* Key Highlights */}
       <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-slate-900">Key Highlights</CardTitle>
+          <CardTitle className="text-lg font-semibold text-slate-900">Highlights</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
