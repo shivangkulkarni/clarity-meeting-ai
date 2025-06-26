@@ -29,8 +29,12 @@ Return only valid JSON without any markdown formatting or explanations.
 Meeting transcript:
 `;
 
-// Replace this with your actual OpenAI API key
-const OPENAI_API_KEY = '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';
+
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+
+if (!OPENAI_API_KEY) {
+  throw new Error('OpenAI API key is not set. Please define VITE_OPENAI_API_KEY in your .env file.');
+}
 
 export const summarizeWithAI = async (transcript: string): Promise<MeetingSummary> => {
   console.log("Starting AI summarization with OpenAI API");
