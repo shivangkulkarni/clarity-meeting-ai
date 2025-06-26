@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +12,35 @@ interface TranscriptInputProps {
 }
 
 const TranscriptInput = ({ transcript, setTranscript, onSummarize, isProcessing }: TranscriptInputProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check if it's a text file
+    if (!file.type.includes('text') && !file.name.endsWith('.txt')) {
+      alert('Please upload a text file (.txt) or a document with text content.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        setTranscript(content);
+      }
+    };
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
+    };
+    reader.readAsText(file);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
       <CardHeader className="space-y-1">
@@ -56,10 +84,24 @@ Mike: From an engineering perspective, we're on track for the March product laun
             )}
           </Button>
           
-          <Button variant="outline" className="border-slate-200 hover:border-slate-300">
+          <Button 
+            variant="outline" 
+            className="border-slate-200 hover:border-slate-300"
+            onClick={handleUploadClick}
+            type="button"
+          >
             <Upload className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,.doc,.docx,.pdf"
+          onChange={handleFileUpload}
+          style={{ display: 'none' }}
+        />
       </CardContent>
     </Card>
   );
